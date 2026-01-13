@@ -149,3 +149,29 @@
     (let ((res (time+ ts (months 1))))
       (is (= 2 (month res)))
       (is (= 28 (day res))))))
+
+(test intervals-basic
+  (let ((s (ymd "2023-01-01"))
+        (e (ymd "2023-01-10")))
+    (let ((int (%--% s e)))
+      (is (typep int 'interval))
+      (is (local-time:timestamp= s (int-start int)))
+      (is (local-time:timestamp= e (int-end int)))
+      (is (= (* 9 86400) (int-length int)))
+      
+      ;; %within%
+      (is (%within% (ymd "2023-01-01") int))
+      (is (%within% (ymd "2023-01-05") int))
+      (is (not (%within% (ymd "2023-01-10") int))) ; half-open
+      (is (not (%within% (ymd "2022-12-31") int))))))
+
+(test intervals-overlaps
+  (let ((i1 (%--% (ymd "2023-01-01") (ymd "2023-01-10")))
+        (i2 (%--% (ymd "2023-01-05") (ymd "2023-01-15")))
+        (i3 (%--% (ymd "2023-01-10") (ymd "2023-01-20")))
+        (i4 (%--% (ymd "2023-01-15") (ymd "2023-01-25"))))
+    (is (int-overlaps i1 i2))
+    (is (int-overlaps i2 i3))
+    (is (not (int-overlaps i1 i3))) ; Touching at boundary is not overlap
+    (is (not (int-overlaps i1 i4)))))
+

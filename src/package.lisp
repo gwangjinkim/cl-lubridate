@@ -10,4 +10,5 @@
            #:zoned-timestamp-impl #:zoned-timestamp-timezone
            #:duration #:period #:add #:sub #:time+ #:time- #:t+ #:t-
            #:dseconds #:dminutes #:dhours #:ddays #:dweeks #:dyears
-           #:seconds #:minutes #:hours #:days #:weeks #:months #:years))
+           #:seconds #:minutes #:hours #:days #:weeks #:months #:years
+           #:interval #:%--% #:%within% #:int-start #:int-end #:int-length #:int-overlaps))
