@@ -54,12 +54,12 @@
     (let (year month day hour minute second)
       ;; Assign Y M D
       (ecase pattern
-        (:ymd (setf year (first nums) month (second nums) day (third nums)))
-        (:dmy (setf day (first nums) month (second nums) year (third nums)))
-        (:mdy (setf month (first nums) day (second nums) year (third nums)))
-        (:ydm (setf year (first nums) day (second nums) month (third nums)))
-        (:dym (setf day (first nums) year (second nums) month (third nums)))
-        (:myd (setf month (first nums) year (second nums) day (third nums))))
+        (:ymd (setf year (first nums) month (nth 1 nums) day (third nums)))
+        (:dmy (setf day (first nums) month (nth 1 nums) year (third nums)))
+        (:mdy (setf month (first nums) day (nth 1 nums) year (third nums)))
+        (:ydm (setf year (first nums) day (nth 1 nums) month (third nums)))
+        (:dym (setf day (first nums) year (nth 1 nums) month (third nums)))
+        (:myd (setf month (first nums) year (nth 1 nums) day (third nums))))
 
       ;; Handle 2-digit years (naive 1900/2000 heuristic if needed, or just let local-time handle it?)
       ;; Lubridate defaults: "68" -> 2068, "69" -> 1969.

@@ -42,3 +42,41 @@
     (is (= 12 (local-time:timestamp-hour ts)))
     (is (= 30 (local-time:timestamp-minute ts)))
     (is (= 45 (local-time:timestamp-second ts)))))
+
+(test components-accessors
+  (let ((ts (ymd-hms "2023-10-31 12:34:56")))
+    (is (= 2023 (year ts)))
+    (is (= 10 (month ts)))
+    (is (= 31 (day ts)))
+    (is (= 31 (mday ts)))
+    (is (= 12 (hour ts)))
+    (is (= 34 (minute ts)))
+    (is (= 56 (second ts)))
+    ;; 2023-10-31 is a Tuesday.
+    ;; local-time: 0=Sunday, 1=Monday, 2=Tuesday.
+    ;; cl-lubridate: 1=Sunday, 2=Monday, 3=Tuesday.
+    (is (= 3 (wday ts))) 
+    (is (= 4 (qday ts)))))
+
+(test components-setters
+  (let ((ts (ymd "2023-01-01")))
+    ;; Test user modification of variable
+    (setf (year ts) 2024)
+    (is (= 2024 (year ts)))
+    
+    (setf (month ts) 2)
+    (is (= 2 (month ts)))
+    
+    (setf (day ts) 28)
+    (is (= 28 (day ts)))
+    
+    (setf (hour ts) 10)
+    (is (= 10 (hour ts)))
+    
+    ;; Test logic with valid changes
+    (setf (month ts) 1)
+    (setf (day ts) 31)
+    ;; Setting month to 2 for Jan 31 matches strict local-time behavior (fail)
+    ;; So we won't test invalid dates here until we decide on a rollover strategy.
+    ;; (setf (month ts) 2)
+    ))
