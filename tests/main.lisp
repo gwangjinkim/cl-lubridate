@@ -275,6 +275,32 @@
     (is (= 1 (month ts)))
     (is (= 1 (day ts)))))
 
+(test advanced-dsl
+  ;; Relative
+  (let ((t-day (today))
+        (tom (tomorrow))
+        (yes (yesterday)))
+    (is (t< t-day tom))
+    (is (t> t-day yes)))
+  
+  ;; Comparisons
+  (let ((ts1 (ymd "2023-01-01"))
+        (ts2 (ymd "2023-01-02")))
+    (is (t< ts1 ts2))
+    (is (t<= ts1 ts2))
+    (is (t<= ts1 ts1))
+    (is (t= ts1 ts1))
+    (is (t>= ts2 ts1))
+    (is (t> ts2 ts1)))
+  
+  ;; with-time
+  (let ((ts (ymd-hms "2023-01-01 12:34:56")))
+    (with-time (ts :year y :month m :hour h)
+      (is (= 2023 y))
+      (is (= 1 m))
+      (is (= 12 h)))))
+
+
 
 
 

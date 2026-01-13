@@ -125,9 +125,51 @@
 (defmethod add ((p period) (ts local-time:timestamp))
   (add ts p))
 
+(defmethod sub ((ts local-time:timestamp) (p period))
+  (let ((res ts))
+    (unless (zerop (period-years p))   (setf res (local-time:timestamp- res (period-years p) :year)))
+    (unless (zerop (period-months p))  (setf res (local-time:timestamp- res (period-months p) :month)))
+    (unless (zerop (period-weeks p))   (setf res (local-time:timestamp- res (* (period-weeks p) 7) :day)))
+    (unless (zerop (period-days p))    (setf res (local-time:timestamp- res (period-days p) :day)))
+    (unless (zerop (period-hours p))   (setf res (local-time:timestamp- res (period-hours p) :hour)))
+    (unless (zerop (period-minutes p)) (setf res (local-time:timestamp- res (period-minutes p) :minute)))
+    (unless (zerop (period-seconds p)) (setf res (local-time:timestamp- res (period-seconds p) :sec)))
+    (unless (zerop (period-nsecs p))   (setf res (local-time:timestamp- res (period-nsecs p) :nsec)))
+    res))
+
+;; Zoned Arithmetic Helpers
+(defmethod add ((ts zoned-timestamp) (d duration))
+  (make-instance 'zoned-timestamp :impl (add (zoned-timestamp-impl ts) d) :timezone (zoned-timestamp-timezone ts)))
+
+(defmethod add ((ts zoned-timestamp) (p period))
+  (make-instance 'zoned-timestamp :impl (add (zoned-timestamp-impl ts) p) :timezone (zoned-timestamp-timezone ts)))
+
+(defmethod add ((p period) (ts zoned-timestamp))
+  (add ts p))
+
+(defmethod add ((d duration) (ts zoned-timestamp))
+  (add ts d))
+
+(defmethod sub ((ts zoned-timestamp) (d duration))
+  (make-instance 'zoned-timestamp :impl (sub (zoned-timestamp-impl ts) d) :timezone (zoned-timestamp-timezone ts)))
+
+(defmethod sub ((ts zoned-timestamp) (p period))
+  (make-instance 'zoned-timestamp :impl (sub (zoned-timestamp-impl ts) p) :timezone (zoned-timestamp-timezone ts)))
+
+
 ;; Timestamp - Timestamp -> Duration
 (defmethod sub ((a local-time:timestamp) (b local-time:timestamp))
   (make-duration (local-time:timestamp-difference a b)))
+
+(defmethod sub ((a zoned-timestamp) (b local-time:timestamp))
+  (sub (zoned-timestamp-impl a) b))
+
+(defmethod sub ((a local-time:timestamp) (b zoned-timestamp))
+  (sub a (zoned-timestamp-impl b)))
+
+(defmethod sub ((a zoned-timestamp) (b zoned-timestamp))
+  (sub (zoned-timestamp-impl a) (zoned-timestamp-impl b)))
+
 
 ;; Support generic accessors for Period/Duration is optional but nice.
 ;; For now, slots are accessors.
