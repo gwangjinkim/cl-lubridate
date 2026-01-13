@@ -3,40 +3,53 @@
 ;;; Components
 ;;; wrappers around local-time accessors, but with R-like names and semantics.
 
-(defun year (timestamp)
-  (local-time:timestamp-year timestamp))
+(defgeneric year (timestamp)
+  (:documentation "Get the year."))
+(defmethod year ((timestamp local-time:timestamp))
+  (local-time:timestamp-year timestamp :timezone local-time:*default-timezone*))
 
-(defun month (timestamp)
-  (local-time:timestamp-month timestamp))
+(defgeneric month (timestamp)
+  (:documentation "Get the month."))
+(defmethod month ((timestamp local-time:timestamp))
+  (local-time:timestamp-month timestamp :timezone local-time:*default-timezone*))
 
-(defun day (timestamp)
-  (local-time:timestamp-day timestamp))
+(defgeneric day (timestamp)
+  (:documentation "Get the day of the month."))
+(defmethod day ((timestamp local-time:timestamp))
+  (local-time:timestamp-day timestamp :timezone local-time:*default-timezone*))
 
-(defun mday (timestamp)
+(defgeneric mday (timestamp))
+(defmethod mday ((timestamp local-time:timestamp))
   (day timestamp))
 
-(defun hour (timestamp)
-  (local-time:timestamp-hour timestamp))
+(defgeneric hour (timestamp))
+(defmethod hour ((timestamp local-time:timestamp))
+  (local-time:timestamp-hour timestamp :timezone local-time:*default-timezone*))
 
-(defun minute (timestamp)
-  (local-time:timestamp-minute timestamp))
+(defgeneric minute (timestamp))
+(defmethod minute ((timestamp local-time:timestamp))
+  (local-time:timestamp-minute timestamp :timezone local-time:*default-timezone*))
 
-(defun second (timestamp)
-  (local-time:timestamp-second timestamp))
+(defgeneric second (timestamp))
+(defmethod second ((timestamp local-time:timestamp))
+  (local-time:timestamp-second timestamp :timezone local-time:*default-timezone*))
 
-(defun wday (timestamp)
+(defgeneric wday (timestamp))
+(defmethod wday ((timestamp local-time:timestamp))
   "Day of week. Returns integer 1-7 (Sun-Sat? R is Sun=1).
    local-time:timestamp-day-of-week returns 0=Sunday, 6=Saturday.
    Lubridate defaults to 1=Sunday, 7=Saturday."
-  (let ((wd (local-time:timestamp-day-of-week timestamp)))
+  (let ((wd (local-time:timestamp-day-of-week timestamp :timezone local-time:*default-timezone*)))
     ;; 0->1, 6->7
     (1+ wd)))
 
-(defun qday (timestamp)
+(defgeneric qday (timestamp))
+(defmethod qday ((timestamp local-time:timestamp))
   "Quarter of the year (1-4)."
   (ceiling (month timestamp) 3))
 
-(defun dst (timestamp)
+(defgeneric dst (timestamp))
+(defmethod dst ((timestamp local-time:timestamp))
   "Returns boolean if DST is active."
   ;; local-time doesn't expose this directly on timestamp-subtimezone easily without timezone
   ;; but timestamp-maximum-offset etc exist.
@@ -44,7 +57,7 @@
   ;; We need to decode with the timezone attached to the timestamp.
   ;; local-time:timestamp-subtimezone gives (offset dst-p abbrev).
   (multiple-value-bind (sec minute hour day month year wday dst-p tz)
-      (local-time:decode-timestamp timestamp)
+      (local-time:decode-timestamp timestamp :timezone local-time:*default-timezone*)
     (declare (ignore sec minute hour day month year wday tz))
     dst-p))
 
@@ -74,9 +87,15 @@
 ;;; That works if place is a variable.
 ;;; Let's implement that approach: Functional update under the hood of setf.
 
-(defun update-timestamp (timestamp &key year month day hour minute second nsec)
+;;; Functional setf expander helper
+;;; We need update-timestamp to be generic too if we want to support wrapped timestamps.
+
+(defgeneric update-timestamp (timestamp &key year month day hour minute second nsec)
+  (:documentation "Return a new timestamp with updated components."))
+
+(defmethod update-timestamp ((timestamp local-time:timestamp) &key year month day hour minute second nsec)
   (multiple-value-bind (nsec-old sec-old min-old hour-old day-old month-old year-old wday dst-p tz)
-      (local-time:decode-timestamp timestamp)
+      (local-time:decode-timestamp timestamp :timezone local-time:*default-timezone*)
     (declare (ignore wday dst-p))
     (let ((args (list (or nsec nsec-old)
                       (or second sec-old)
@@ -89,7 +108,6 @@
           (apply #'local-time:encode-timestamp (append args (list :offset tz :timezone local-time:+utc-zone+)))
           (apply #'local-time:encode-timestamp (append args (list :timezone tz)))))))
 
-;;; Functional setf expander helper
 (defmacro define-component-setf (accessor-name component-keyword)
   `(define-setf-expander ,accessor-name (place &environment env)
      (multiple-value-bind (vars vals store-vars writer-form reader-form)
@@ -100,6 +118,8 @@
                  vals
                  (list new-val)
                  `(let ((,temp ,reader-form))
+                    ;; Ensure we call generic functions, but setq expects the value to be put back.
+                    ;; The magic is that update-timestamp returns the same type as temp.
                     (setq ,temp (update-timestamp ,temp ,',component-keyword ,new-val))
                     (let ((,(first store-vars) ,temp))
                       ,writer-form))

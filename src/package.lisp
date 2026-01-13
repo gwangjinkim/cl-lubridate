@@ -5,4 +5,6 @@
   (:export #:ymd #:mdy #:dmy #:ymd-hms
            #:parse-date-components
            #:year #:month #:day #:mday #:wday #:qday #:dst
-           #:hour #:minute #:second))
+           #:hour #:minute #:second
+           #:with-tz #:force-tz #:zoned-timestamp
+           #:zoned-timestamp-impl #:zoned-timestamp-timezone))

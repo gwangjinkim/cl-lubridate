@@ -80,3 +80,31 @@
     ;; So we won't test invalid dates here until we decide on a rollover strategy.
     ;; (setf (month ts) 2)
     ))
+
+(test timezones-basics
+  (let ((local-time:*default-timezone* local-time:+utc-zone+))
+    (let ((ts (ymd-hms "2023-01-01 12:00:00")))
+      ;; Default is UTC now.
+      ;; with-tz should change display hour.
+      ;; UTC+1 (CET)
+      (let ((cet (with-tz ts "Europe/Paris")))
+        (is (= 2023 (year cet)))
+        ;; 12:00 UTC is 13:00 CET
+        (is (= 13 (hour cet)))
+        (is (= 12 (hour ts))) ;; Original unchanged
+        
+        ;; Force-tz should keep clock time (12:00) but change instant
+        (let ((forced (force-tz ts "Europe/Paris")))
+          (is (= 12 (hour forced)))
+          ;; Instant should contain offset. 12:00 CET is 11:00 UTC.
+          (is (not (local-time:timestamp= (zoned-timestamp-impl forced) ts)))
+          (is (= 11 (local-time:timestamp-hour (zoned-timestamp-impl forced) :timezone local-time:+utc-zone+))))))))
+
+(test zoned-timestamp-accessors
+  (let ((local-time:*default-timezone* local-time:+utc-zone+))
+    (let* ((ts (ymd-hms "2023-06-01 12:00:00"))
+           (zts (with-tz ts "America/New_York")))
+      ;; 12:00 UTC is 08:00 EDT
+      (is (= 8 (hour zts)))
+      (is (= 6 (month zts)))
+      (is (= 2023 (year zts))))))
