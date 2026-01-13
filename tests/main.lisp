@@ -175,3 +175,36 @@
     (is (not (int-overlaps i1 i3))) ; Touching at boundary is not overlap
     (is (not (int-overlaps i1 i4)))))
 
+(test rounding-basics
+  (let ((ts (ymd-hms "2023-01-15 12:34:56")))
+    ;; Floor
+    (let ((f-month (floor-date ts :month)))
+      (is (= 1 (month f-month)))
+      (is (= 1 (day f-month)))
+      (is (= 0 (hour f-month))))
+    
+    (let ((f-year (floor-date ts :year)))
+      (is (= 2023 (year f-year)))
+      (is (= 1 (month f-year)))
+      (is (= 1 (day f-year))))
+    
+    ;; Ceiling
+    (let ((c-month (ceiling-date ts :month)))
+      (is (= 2 (month c-month)))
+      (is (= 1 (day c-month))))
+    
+    ;; Round
+    (let ((r1 (round-date (ymd "2023-01-10") :month)))
+      (is (= 1 (month r1))))
+    (let ((r2 (round-date (ymd "2023-01-20") :month)))
+      (is (= 2 (month r2))))))
+
+(test rounding-zoned
+  (let* ((ts (with-tz (ymd-hms "2023-01-01 23:50:00") "Europe/Paris")))
+    ;; 23:50 Paris is fine. Ceiling to day should be next day.
+    (let ((c (ceiling-date ts :day)))
+      (is (= 2 (day c)))
+      (is (= 0 (hour c)))
+      (is (typep c 'zoned-timestamp)))))
+
+
