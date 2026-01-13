@@ -1,0 +1,21 @@
+#!/usr/bin/env ros
+;; -*- mode: lisp; -*-
+;; scripts/repl.ros — load local ASDF + system, then stay interactive
+
+(require :asdf)
+
+(let* ((root (uiop:getcwd))
+       (asd  (merge-pathnames "cl-lubridate.asd" root)))
+  (asdf:load-asd asd))
+
+;; If you use Quicklisp, this will work after ASDF knows about the system.
+;; If you don't use Quicklisp, replace with (asdf:load-system :cl-lubridate).
+(handler-case
+    (progn
+      (ql:quickload :cl-lubridate)
+      (format t "~&cl-lubridate loaded. Package: CL-LUBRIDATE~%"))
+  (error ()
+    (asdf:load-system :cl-lubridate)
+    (format t "~&cl-lubridate loaded via ASDF. Package: CL-LUBRIDATE~%")))
+
+;; Do not quit; drop into REPL
