@@ -207,4 +207,35 @@
       (is (= 0 (hour c)))
       (is (typep c 'zoned-timestamp)))))
 
+(test integration-missing-api
+  (let ((ts (ymd-hms "2023-01-15 12:34:56")))
+    (is (string= "January" (month-name ts)))
+    (is (string= "Jan" (month-name ts :abbr t)))
+    (is (string= "Sunday" (wday-name (ymd "2023-01-01")))) ; 2023-01-01 was Sunday
+    (is (string= "Sun" (wday-name (ymd "2023-01-01") :abbr t)))
+    
+    (is (typep (tz ts) 'local-time::timezone))
+    (is (= 2023 (isoyear ts)))
+    
+    ;; Parsers
+    (let ((ts2 (ymd-hm "2023-01-15 12:34")))
+      (is (= 12 (hour ts2)))
+      (is (= 34 (minute ts2))))
+    
+    (let ((ts3 (make-date :year 2024 :month 2 :day 29)))
+      (is (= 2024 (year ts3)))
+      (is (= 29 (day ts3))))
+    
+    (let ((ts4 (make-datetime :year 2023 :month 1 :day 1 :tz "Europe/Paris")))
+      ;; Use internal symbol for test verification if not exported
+      (is (string= "Europe/Paris" (local-time::timezone-name (tz ts4)))))))
+
+(test printing-polish
+  (let ((zts (make-datetime :year 2023 :month 1 :day 1 :hour 12 :tz "Europe/Paris")))
+    (let ((s (with-output-to-string (stream)
+               (print-object zts stream))))
+      ;; Check for format <YYYY-MM-DD HH:MM:SS ZONE>
+      (is (ppcre:scan "<2023-01-01 12:00:00 [A-Z]+>" s)))))
+
+
 

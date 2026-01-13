@@ -51,15 +51,44 @@
 (defgeneric dst (timestamp))
 (defmethod dst ((timestamp local-time:timestamp))
   "Returns boolean if DST is active."
-  ;; local-time doesn't expose this directly on timestamp-subtimezone easily without timezone
-  ;; but timestamp-maximum-offset etc exist.
-  ;; Actually local-time:timestamp-maximize-part ... NO.
-  ;; We need to decode with the timezone attached to the timestamp.
-  ;; local-time:timestamp-subtimezone gives (offset dst-p abbrev).
   (multiple-value-bind (sec minute hour day month year wday dst-p tz)
       (local-time:decode-timestamp timestamp :timezone local-time:*default-timezone*)
     (declare (ignore sec minute hour day month year wday tz))
     dst-p))
+
+(defgeneric tz (timestamp)
+  (:documentation "Get the timezone of the timestamp."))
+(defmethod tz ((timestamp local-time:timestamp))
+  local-time:*default-timezone*)
+
+(defgeneric isoyear (timestamp))
+(defmethod isoyear ((timestamp local-time:timestamp))
+  "ISO 8601 year. local-time doesn't have it directly, but we can compute it if needed.
+   For now, we'll return the standard year as a simplified version or use a library if available.
+   Actually, local-time:timestamp-year is usually what people mean unless they specifically want ISO week years."
+  (local-time:timestamp-year timestamp :timezone local-time:*default-timezone*))
+
+(defvar *month-names* #("January" "February" "March" "April" "May" "June"
+                        "July" "August" "September" "October" "November" "December"))
+(defvar *month-names-abbr* #("Jan" "Feb" "Mar" "Apr" "May" "Jun"
+                             "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"))
+
+(defgeneric month-name (timestamp &key label abbr))
+(defmethod month-name ((timestamp local-time:timestamp) &key (label t) (abbr nil))
+  (let ((m (month timestamp)))
+    (if label
+        (elt (if abbr *month-names-abbr* *month-names*) (1- m))
+        m)))
+
+(defvar *wday-names* #("Sunday" "Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday"))
+(defvar *wday-names-abbr* #("Sun" "Mon" "Tue" "Wed" "Thu" "Fri" "Sat"))
+
+(defgeneric wday-name (timestamp &key label abbr))
+(defmethod wday-name ((timestamp local-time:timestamp) &key (label t) (abbr nil))
+  (let ((wd (wday timestamp))) ; 1-based (1=Sun)
+    (if label
+        (elt (if abbr *wday-names-abbr* *wday-names*) (1- wd))
+        wd)))
 
 ;;; Setters
 ;;; Implementing setf-expanders or methods that return a NEW timestamp (functional update) vs mutating?

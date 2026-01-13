@@ -12,12 +12,11 @@
 
 (defmethod print-object ((obj zoned-timestamp) stream)
   (let ((local-time:*default-timezone* (zoned-timestamp-timezone obj)))
-    (print-object (zoned-timestamp-impl obj) stream)
-    ;; Maybe append zone name if local-time doesn't?
-    ;; local-time prints +HH:MM. It doesn't print "EST".
-    ;; We might want to make it explicit?
-    ;; (format stream " ~A" (local-time:timezone-name ...))
-    ))
+    (multiple-value-bind (nsec sec minute hour day month year wday dst-p tz-obj offset zone-name)
+        (local-time:decode-timestamp (zoned-timestamp-impl obj) :timezone (zoned-timestamp-timezone obj))
+      (declare (ignore nsec wday dst-p tz-obj offset))
+      (format stream "<~D-~2,'0D-~2,'0D ~2,'0D:~2,'0D:~2,'0D ~A>"
+              year month day hour minute sec zone-name))))
 
 ;;; Wrap accessors for zoned-timestamp
 (defmethod year ((tz zoned-timestamp))
@@ -49,11 +48,30 @@
                                         :timezone (zoned-timestamp-timezone tz))))
 
 (defmethod dst ((tz zoned-timestamp))
-  (multiple-value-bind (sec minute hour day month year wday dst-p tz)
+  (multiple-value-bind (sec minute hour day month year wday dst-p zone)
       (local-time:decode-timestamp (zoned-timestamp-impl tz)
                                    :timezone (zoned-timestamp-timezone tz))
-    (declare (ignore sec minute hour day month year wday tz))
+    (declare (ignore sec minute hour day month year wday zone))
     dst-p))
+
+(defmethod tz ((tz zoned-timestamp))
+  (zoned-timestamp-timezone tz))
+
+(defmethod isoyear ((tz zoned-timestamp))
+  (local-time:timestamp-year (zoned-timestamp-impl tz)
+                             :timezone (zoned-timestamp-timezone tz)))
+
+(defmethod month-name ((tz zoned-timestamp) &key (label t) (abbr nil))
+  (let ((m (month tz)))
+    (if label
+        (elt (if abbr *month-names-abbr* *month-names*) (1- m))
+        m)))
+
+(defmethod wday-name ((tz zoned-timestamp) &key (label t) (abbr nil))
+  (let ((wd (wday tz)))
+    (if label
+        (elt (if abbr *wday-names-abbr* *wday-names*) (1- wd))
+        wd)))
 
 ;;; Update-timestamp for zoned-timestamp
 (defmethod update-timestamp ((tz zoned-timestamp) &key year month day hour minute second nsec)

@@ -4,8 +4,9 @@
   (:documentation "Main package for cl-lubridate, a Common Lisp date-time library.")
   (:export #:ymd #:mdy #:dmy #:ymd-hms
            #:parse-date-components
-           #:year #:month #:day #:mday #:wday #:qday #:dst
+           #:year #:month #:day #:mday #:wday #:qday #:dst #:tz #:isoyear #:month-name #:wday-name
            #:hour #:minute #:second
+           #:ymd-hm #:ymd-h #:dmy-hms #:mdy-hms #:make-date #:make-datetime
            #:with-tz #:force-tz #:zoned-timestamp
            #:zoned-timestamp-impl #:zoned-timestamp-timezone
            #:duration #:period #:add #:sub #:time+ #:time- #:t+ #:t-
