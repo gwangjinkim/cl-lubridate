@@ -1,3 +1,5 @@
 (defpackage #:cl-lubridate
   (:use #:cl)
-  (:documentation "Main package for cl-lubridate, a Common Lisp date-time library."))
+  (:documentation "Main package for cl-lubridate, a Common Lisp date-time library.")
+  (:export #:ymd #:mdy #:dmy #:ymd-hms
+           #:parse-date-components))
