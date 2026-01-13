@@ -18,23 +18,28 @@
 (defmethod day ((timestamp local-time:timestamp))
   (local-time:timestamp-day timestamp :timezone local-time:*default-timezone*))
 
-(defgeneric mday (timestamp))
+(defgeneric mday (timestamp)
+  (:documentation "Get the day of the month. Alias for day."))
 (defmethod mday ((timestamp local-time:timestamp))
   (day timestamp))
 
-(defgeneric hour (timestamp))
+(defgeneric hour (timestamp)
+  (:documentation "Get the hour part (0-23)."))
 (defmethod hour ((timestamp local-time:timestamp))
   (local-time:timestamp-hour timestamp :timezone local-time:*default-timezone*))
 
-(defgeneric minute (timestamp))
+(defgeneric minute (timestamp)
+  (:documentation "Get the minute part (0-59)."))
 (defmethod minute ((timestamp local-time:timestamp))
   (local-time:timestamp-minute timestamp :timezone local-time:*default-timezone*))
 
-(defgeneric second (timestamp))
+(defgeneric second (timestamp)
+  (:documentation "Get the second part (0-59)."))
 (defmethod second ((timestamp local-time:timestamp))
   (local-time:timestamp-second timestamp :timezone local-time:*default-timezone*))
 
-(defgeneric wday (timestamp))
+(defgeneric wday (timestamp)
+  (:documentation "Get the day of the week (1=Sunday, 7=Saturday)."))
 (defmethod wday ((timestamp local-time:timestamp))
   "Day of week. Returns integer 1-7 (Sun-Sat? R is Sun=1).
    local-time:timestamp-day-of-week returns 0=Sunday, 6=Saturday.
@@ -43,7 +48,8 @@
     ;; 0->1, 6->7
     (1+ wd)))
 
-(defgeneric qday (timestamp))
+(defgeneric qday (timestamp)
+  (:documentation "Get the day within the current quarter."))
 (defmethod qday ((timestamp local-time:timestamp))
   "Quarter of the year (1-4)."
   (ceiling (month timestamp) 3))

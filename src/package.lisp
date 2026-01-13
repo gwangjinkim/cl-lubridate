@@ -7,6 +7,8 @@
            #:year #:month #:day #:mday #:wday #:qday #:dst #:tz #:isoyear #:month-name #:wday-name
            #:hour #:minute #:second
            #:ymd-hm #:ymd-h #:dmy-hms #:mdy-hms #:make-date #:make-datetime
+           #:now #:today #:here
+           #:to-universal-time #:from-universal-time #:with-timezone #:map-dates #:enable-lubridate-syntax
            #:with-tz #:force-tz #:zoned-timestamp
            #:zoned-timestamp-impl #:zoned-timestamp-timezone
            #:duration #:period #:add #:sub #:time+ #:time- #:t+ #:t-

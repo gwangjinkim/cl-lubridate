@@ -8,9 +8,10 @@
          :documentation "The underlying local-time:timestamp (UTC).")
    (timezone :initarg :timezone :accessor zoned-timestamp-timezone
              :documentation "The local-time:timezone to use for display/access."))
-  (:documentation "A timestamp that remembers its timezone."))
+  (:documentation "A timestamp object that carries its own timezone for display and component access."))
 
 (defmethod print-object ((obj zoned-timestamp) stream)
+  "Pretty print for zoned-timestamp in format <YYYY-MM-DD HH:MM:SS ZONE>."
   (let ((local-time:*default-timezone* (zoned-timestamp-timezone obj)))
     (multiple-value-bind (nsec sec minute hour day month year wday dst-p tz-obj offset zone-name)
         (local-time:decode-timestamp (zoned-timestamp-impl obj) :timezone (zoned-timestamp-timezone obj))

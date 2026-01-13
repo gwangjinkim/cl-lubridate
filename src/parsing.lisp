@@ -132,3 +132,17 @@
 (defun make-datetime (&key (year 1970) (month 1) (day 1) (hour 0) (minute 0) (second 0) (nsec 0) (tz "UTC"))
   (let ((zone (find-timezone tz)))
     (with-tz (local-time:encode-timestamp nsec second minute hour day month year :timezone zone) zone)))
+
+(defun now (&optional tz)
+  "Get the current time. If TZ is provided, returns a zoned-timestamp."
+  (if tz
+      (with-tz (local-time:now) tz)
+      (local-time:now)))
+
+(defun today (&optional tz)
+  "Get the current date (floored to day)."
+  (floor-date (now tz) :day))
+
+(defun here ()
+  "Get current time in system's local timezone."
+  (with-tz (local-time:now) local-time:*default-timezone*))

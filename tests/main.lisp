@@ -237,5 +237,45 @@
       ;; Check for format <YYYY-MM-DD HH:MM:SS ZONE>
       (is (ppcre:scan "<2023-01-01 12:00:00 [A-Z]+>" s)))))
 
+(test sugar-api
+  (let ((n (now)))
+    (is (typep n 'local-time:timestamp)))
+  (let ((z (now "UTC")))
+    (is (typep z 'zoned-timestamp)))
+  (let ((t-day (today)))
+    (is (= 0 (hour t-day)))
+    (is (= 0 (minute t-day)))))
+
+(test lispy-sugar
+  ;; Universal Time
+  (let* ((ts (ymd "2023-01-01"))
+         (ut (to-universal-time ts)))
+    (is (integerp ut))
+    (is (local-time:timestamp= ts (from-universal-time ut))))
+  
+  ;; Iterators
+  (let* ((start (ymd "2023-01-01"))
+         (end (ymd "2023-01-04"))
+         (dates (map-dates start end (days 1) #'identity)))
+    (is (= 3 (length dates)))
+    (is (= 1 (day (nth 0 dates))))
+    (is (= 2 (day (nth 1 dates))))
+    (is (= 3 (day (nth 2 dates)))))
+  
+  ;; Dynamic context
+  (with-timezone "Europe/Paris"
+    (let ((ts (ymd-hms "2023-01-01 12:00:00")))
+      ;; Should be 12:00 in Paris
+      (is (= 12 (hour ts)))))
+  
+  ;; Reader Macro
+  (enable-lubridate-syntax)
+  (let ((ts (read-from-string "#d\"2023-01-01\"")))
+    (is (= 2023 (year ts)))
+    (is (= 1 (month ts)))
+    (is (= 1 (day ts)))))
+
+
+
 
 
