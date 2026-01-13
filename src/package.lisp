@@ -7,4 +7,7 @@
            #:year #:month #:day #:mday #:wday #:qday #:dst
            #:hour #:minute #:second
            #:with-tz #:force-tz #:zoned-timestamp
-           #:zoned-timestamp-impl #:zoned-timestamp-timezone))
+           #:zoned-timestamp-impl #:zoned-timestamp-timezone
+           #:duration #:period #:add #:sub #:time+ #:time- #:t+ #:t-
+           #:dseconds #:dminutes #:dhours #:ddays #:dweeks #:dyears
+           #:seconds #:minutes #:hours #:days #:weeks #:months #:years))

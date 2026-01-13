@@ -108,3 +108,44 @@
       (is (= 8 (hour zts)))
       (is (= 6 (month zts)))
       (is (= 2023 (year zts))))))
+
+(test arithmetic-duration
+  (let ((ts (ymd-hms "2023-01-01 00:00:00")))
+    (is (= (local-time:timestamp-to-unix (time+ ts (dseconds 60)))
+           (+ (local-time:timestamp-to-unix ts) 60)))
+    (is (= (local-time:timestamp-to-unix (time+ ts (dhours 1)))
+           (+ (local-time:timestamp-to-unix ts) 3600)))
+    (is (= (local-time:timestamp-to-unix (time- ts (dminutes 1)))
+           (- (local-time:timestamp-to-unix ts) 60)))
+    
+    (let ((diff (time- (time+ ts (dhours 1)) ts)))
+      (is (typep diff 'duration))
+      (is (= 3600 (slot-value diff 'seconds))))))
+
+(test arithmetic-period
+  (let ((ts (ymd-hms "2023-01-01 00:00:00")))
+    ;; Add 1 month
+    (let ((ts2 (time+ ts (months 1))))
+      (is (= 2 (month ts2)))
+      (is (= 2023 (year ts2))))
+    
+    ;; Add 1 year
+    (let ((ts3 (time+ ts (years 1))))
+      (is (= 2024 (year ts3))))
+    
+    ;; Chained period
+    (let ((p (add (months 1) (days 1))))
+      (let ((ts4 (time+ ts p)))
+        (is (= 2 (month ts4)))
+        (is (= 2 (day ts4)))))))
+
+(test arithmetic-rollover
+  (let ((ts (ymd "2023-01-31")))
+    ;; Jan 31 + 1 month -> Feb 28 (or 29) or March?
+    ;; Local-time timestamp+ simply increments unit.
+    ;; Local-time timestamp+ behavior:
+    ;; Adding 1 month to Jan 31 results in Feb 28 (clipped to end of month), 
+    ;; NOT rolling over to March.
+    (let ((res (time+ ts (months 1))))
+      (is (= 2 (month res)))
+      (is (= 28 (day res))))))

@@ -11,6 +11,7 @@
                  (:file "core")
                  (:file "components")
                  (:file "timezones")
+                 (:file "arithmetic")
                  (:file "parsing"))))
   :description "A Common Lisp port of R's lubridate package for date-time manipulation."
   :in-order-to ((test-op (test-op "cl-lubridate/tests"))))
