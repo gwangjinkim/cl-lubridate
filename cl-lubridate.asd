@@ -1,7 +1,7 @@
 (defsystem "cl-lubridate"
   :version "0.1.0"
-  :author ""
-  :license ""
+  :author "Gwang-Jin Kim <gwang.jin.kim.phd@gmail.com>"
+  :license "MIT"
   :depends-on ("local-time"
                "cl-ppcre")
                ;; "cl-tibble") ;; Integration as requested
