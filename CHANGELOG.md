@@ -51,6 +51,9 @@ All notable changes to this project are documented here. Format follows
   over a date column with any gap used to fail (topic: NA support).
 
 ### Changed
+- AGENTS.md: "Parity work" section listing this repository's parity
+  milestones (LB1, LB2, LB3, LB4) and where the plan and backlog live
+  (topic: parity plan).
 - New dependency on `cl-vctrs-lite`, for the shared missing value `*na*`.
 - Stopped tracking `build/` (53 files, 2.0M): the ASDF/Roswell compile
   cache that `make test` writes via `XDG_CACHE_HOME=$(PWD)/build`. It held
