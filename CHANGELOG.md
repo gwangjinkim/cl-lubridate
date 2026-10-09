@@ -47,6 +47,9 @@ All notable changes to this project are documented here. Format follows
   remain in history (topic: repo hygiene).
 
 ### Tests
+- `(asdf:test-system :cl-lubridate)` now signals an error when a test
+  fails; it previously returned normally, so scripts and CI saw success
+  (found when a failing commit slipped through) (topic: test wiring).
 - New `parsing-missing-input-gives-na` (18 checks). Suite: 133/133 pass.
 - New `second-on-lists-behaves-like-cl-second` (3 checks). Suite: 136/136.
 - `parsing-hms` reads hours in UTC; `rounding-zoned` builds "23:50 in

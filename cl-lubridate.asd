@@ -30,4 +30,8 @@
                 ((:file "package")
                  (:file "main"))))
   :description "Test system for cl-lubridate"
-  :perform (test-op (op c) (symbol-call :cl-lubridate-tests :run-tests)))
+  ;; RUN-TESTS returns FiveAM's result; signal an error on failure so
+  ;; (asdf:test-system :cl-lubridate) and CI notice it.
+  :perform (test-op (op c)
+             (unless (symbol-call :cl-lubridate-tests :run-tests)
+               (error "cl-lubridate tests failed"))))
