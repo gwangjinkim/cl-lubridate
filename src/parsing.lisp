@@ -88,7 +88,8 @@
       (values year month day (or hour 0) (or minute 0) (or second 0)))))
 
 (defun %make-timestamp-from-components (year month day hour minute second)
-  (local-time:encode-timestamp 0 second minute hour day month year))
+  (local-time:encode-timestamp 0 second minute hour day month year
+                               :timezone *default-tz*))
 
 ;;; Missing input (NIL or cl-vctrs-lite:*na*, which cl-readr produces for
 ;;; blank cells) parses to *na* instead of signalling a type error, so a
@@ -149,7 +150,7 @@
         (%make-timestamp-from-components y m d h min s))))
 
 (defun make-date (&key (year 1970) (month 1) (day 1))
-  (local-time:encode-timestamp 0 0 0 0 day month year))
+  (local-time:encode-timestamp 0 0 0 0 day month year :timezone *default-tz*))
 
 (defun make-datetime (&key (year 1970) (month 1) (day 1) (hour 0) (minute 0) (second 0) (nsec 0) (tz "UTC"))
   (let ((zone (find-timezone tz)))
@@ -162,8 +163,16 @@
       (local-time:now)))
 
 (defun today (&optional tz)
-  "Get the current date (floored to day)."
-  (floor-date (now tz) :day))
+  "Current date, like R's today(): the calendar date in the system time
+zone (or in TZ if given), returned as a timestamp at midnight in
+*DEFAULT-TZ*, so (hour (today)) is 0 and (day (today)) is today's date."
+  (multiple-value-bind (nsec sec minute hour day month year)
+      (local-time:decode-timestamp (local-time:now)
+                                   :timezone (if tz
+                                                 (find-timezone tz)
+                                                 local-time:*default-timezone*))
+    (declare (ignore nsec sec minute hour))
+    (make-date :year year :month month :day day)))
 
 (defun here ()
   "Get current time in system's local timezone."

@@ -6,17 +6,17 @@
 (defgeneric year (timestamp)
   (:documentation "Get the year."))
 (defmethod year ((timestamp local-time:timestamp))
-  (local-time:timestamp-year timestamp :timezone local-time:*default-timezone*))
+  (local-time:timestamp-year timestamp :timezone *default-tz*))
 
 (defgeneric month (timestamp)
   (:documentation "Get the month."))
 (defmethod month ((timestamp local-time:timestamp))
-  (local-time:timestamp-month timestamp :timezone local-time:*default-timezone*))
+  (local-time:timestamp-month timestamp :timezone *default-tz*))
 
 (defgeneric day (timestamp)
   (:documentation "Get the day of the month."))
 (defmethod day ((timestamp local-time:timestamp))
-  (local-time:timestamp-day timestamp :timezone local-time:*default-timezone*))
+  (local-time:timestamp-day timestamp :timezone *default-tz*))
 
 (defgeneric mday (timestamp)
   (:documentation "Get the day of the month. Alias for day."))
@@ -26,17 +26,17 @@
 (defgeneric hour (timestamp)
   (:documentation "Get the hour part (0-23)."))
 (defmethod hour ((timestamp local-time:timestamp))
-  (local-time:timestamp-hour timestamp :timezone local-time:*default-timezone*))
+  (local-time:timestamp-hour timestamp :timezone *default-tz*))
 
 (defgeneric minute (timestamp)
   (:documentation "Get the minute part (0-59)."))
 (defmethod minute ((timestamp local-time:timestamp))
-  (local-time:timestamp-minute timestamp :timezone local-time:*default-timezone*))
+  (local-time:timestamp-minute timestamp :timezone *default-tz*))
 
 (defgeneric second (timestamp)
   (:documentation "Get the second part (0-59)."))
 (defmethod second ((timestamp local-time:timestamp))
-  (local-time:timestamp-second timestamp :timezone local-time:*default-timezone*))
+  (local-time:timestamp-second timestamp :timezone *default-tz*))
 
 ;; SECOND shadows CL:SECOND. For lists, behave exactly like CL:SECOND, so a
 ;; package that uses cl-lubridate (or cl-tidyverse) can still write
@@ -50,7 +50,7 @@
   "Day of week. Returns integer 1-7 (Sun-Sat? R is Sun=1).
    local-time:timestamp-day-of-week returns 0=Sunday, 6=Saturday.
    Lubridate defaults to 1=Sunday, 7=Saturday."
-  (let ((wd (local-time:timestamp-day-of-week timestamp :timezone local-time:*default-timezone*)))
+  (let ((wd (local-time:timestamp-day-of-week timestamp :timezone *default-tz*)))
     ;; 0->1, 6->7
     (1+ wd)))
 
@@ -64,21 +64,21 @@
 (defmethod dst ((timestamp local-time:timestamp))
   "Returns boolean if DST is active."
   (multiple-value-bind (sec minute hour day month year wday dst-p tz)
-      (local-time:decode-timestamp timestamp :timezone local-time:*default-timezone*)
+      (local-time:decode-timestamp timestamp :timezone *default-tz*)
     (declare (ignore sec minute hour day month year wday tz))
     dst-p))
 
 (defgeneric tz (timestamp)
   (:documentation "Get the timezone of the timestamp."))
 (defmethod tz ((timestamp local-time:timestamp))
-  local-time:*default-timezone*)
+  *default-tz*)
 
 (defgeneric isoyear (timestamp))
 (defmethod isoyear ((timestamp local-time:timestamp))
   "ISO 8601 year. local-time doesn't have it directly, but we can compute it if needed.
    For now, we'll return the standard year as a simplified version or use a library if available.
    Actually, local-time:timestamp-year is usually what people mean unless they specifically want ISO week years."
-  (local-time:timestamp-year timestamp :timezone local-time:*default-timezone*))
+  (local-time:timestamp-year timestamp :timezone *default-tz*))
 
 (defvar *month-names* #("January" "February" "March" "April" "May" "June"
                         "July" "August" "September" "October" "November" "December"))
@@ -136,7 +136,7 @@
 
 (defmethod update-timestamp ((timestamp local-time:timestamp) &key year month day hour minute second nsec)
   (multiple-value-bind (nsec-old sec-old min-old hour-old day-old month-old year-old wday dst-p tz)
-      (local-time:decode-timestamp timestamp :timezone local-time:*default-timezone*)
+      (local-time:decode-timestamp timestamp :timezone *default-tz*)
     (declare (ignore wday dst-p))
     (let ((args (list (or nsec nsec-old)
                       (or second sec-old)

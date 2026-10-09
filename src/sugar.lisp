@@ -15,9 +15,14 @@
 
 ;;; Dynamic Context
 (defmacro with-timezone (tz &body body)
-  "Execute BODY with local-time:*default-timezone* bound to TZ."
-  `(let ((local-time:*default-timezone* (find-timezone ,tz)))
-     ,@body))
+  "Execute BODY with plain timestamps created and read in TZ: binds
+cl-lubridate's *DEFAULT-TZ* (parsing, components, rounding) and
+local-time:*default-timezone* (printing) to TZ."
+  (let ((zone (gensym "ZONE")))
+    `(let* ((,zone (find-timezone ,tz))
+            (*default-tz* ,zone)
+            (local-time:*default-timezone* ,zone))
+       ,@body)))
 
 ;;; Iterators
 (defun map-dates (start end period func)

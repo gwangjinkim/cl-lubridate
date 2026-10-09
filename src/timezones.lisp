@@ -133,7 +133,7 @@
   (let ((zone (find-timezone tz))
         (src-zone (if (typep time 'zoned-timestamp)
                       (zoned-timestamp-timezone time)
-                      local-time:*default-timezone*))
+                      *default-tz*))
         (impl (if (typep time 'zoned-timestamp)
                   (zoned-timestamp-impl time)
                   time)))

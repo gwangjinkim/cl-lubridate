@@ -5,7 +5,7 @@
 (defun %get-timezone (date)
   (if (typep date 'zoned-timestamp)
       (zoned-timestamp-timezone date)
-      local-time:*default-timezone*))
+      *default-tz*))
 
 (defun %get-impl (date)
   (if (typep date 'zoned-timestamp)

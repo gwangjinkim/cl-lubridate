@@ -38,10 +38,11 @@
     (is (= 1 (local-time:timestamp-day ts)))))
 
 (test parsing-hms
+  ;; Parsed in UTC (*default-tz*), like R's lubridate.
   (let ((ts (ymd-hms "2023-01-01 12:30:45")))
-    (is (= 12 (local-time:timestamp-hour ts)))
-    (is (= 30 (local-time:timestamp-minute ts)))
-    (is (= 45 (local-time:timestamp-second ts)))))
+    (is (= 12 (local-time:timestamp-hour ts :timezone local-time:+utc-zone+)))
+    (is (= 30 (local-time:timestamp-minute ts :timezone local-time:+utc-zone+)))
+    (is (= 45 (local-time:timestamp-second ts :timezone local-time:+utc-zone+)))))
 
 (test components-accessors
   (let ((ts (ymd-hms "2023-10-31 12:34:56")))
@@ -200,7 +201,9 @@
       (is (= 2 (month r2))))))
 
 (test rounding-zoned
-  (let* ((ts (with-tz (ymd-hms "2023-01-01 23:50:00") "Europe/Paris")))
+  ;; 23:50 wall-clock time in Paris (FORCE-TZ keeps the clock time;
+  ;; WITH-TZ would convert the UTC instant, giving 00:50 on Jan 2).
+  (let* ((ts (force-tz (ymd-hms "2023-01-01 23:50:00") "Europe/Paris")))
     ;; 23:50 Paris is fine. Ceiling to day should be next day.
     (let ((c (ceiling-date ts :day)))
       (is (= 2 (day c)))
@@ -321,3 +324,22 @@ them through as *na* rather than signal a type error."
   (is (eq 'b (second '(a b c))))
   (is (null (second '(a))))
   (is (null (second '()))))
+
+(test dates-are-utc-regardless-of-machine-zone
+  "D1: like R, parsing and components use UTC (*default-tz*), so a date
+does not shift with the machine's time zone."
+  (let ((local-time:*default-timezone* (cl-lubridate::find-timezone "America/Los_Angeles")))
+    (let ((d (ymd "2024-01-05")))
+      (is (= 5 (day d)))
+      (is (= 0 (hour d)))
+      (is (= 0 (local-time:timestamp-hour d :timezone local-time:+utc-zone+))))
+    (is (= 1 (day (floor-date (ymd-hms "2024-01-01 23:30:00") :day))))
+    (let ((td (today)))
+      (is (= 0 (hour td))))))
+
+(test with-timezone-rebinds-default-tz
+  (with-timezone "Asia/Tokyo"
+    (let ((d (ymd-hms "2024-01-05 08:00:00")))
+      (is (= 8 (hour d)))
+      ;; 08:00 in Tokyo is 23:00 UTC the previous day
+      (is (= 4 (local-time:timestamp-day d :timezone local-time:+utc-zone+))))))

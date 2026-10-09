@@ -3,7 +3,8 @@
   (:nicknames #:lubridate #:lbd)
   (:shadow #:second)
   (:documentation "Main package for cl-lubridate, a Common Lisp date-time library.")
-  (:export #:ymd #:mdy #:dmy #:ymd-hms
+  (:export #:*default-tz*
+           #:ymd #:mdy #:dmy #:ymd-hms
            #:parse-date-components
            #:year #:month #:day #:mday #:wday #:qday #:dst #:tz #:isoyear #:month-name #:wday-name
            #:hour #:minute #:second
