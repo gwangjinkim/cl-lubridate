@@ -38,6 +38,12 @@
 (defmethod second ((timestamp local-time:timestamp))
   (local-time:timestamp-second timestamp :timezone local-time:*default-timezone*))
 
+;; SECOND shadows CL:SECOND. For lists, behave exactly like CL:SECOND, so a
+;; package that uses cl-lubridate (or cl-tidyverse) can still write
+;; (second '(a b c)).
+(defmethod second ((list list))
+  (cl:second list))
+
 (defgeneric wday (timestamp)
   (:documentation "Get the day of the week (1=Sunday, 7=Saturday)."))
 (defmethod wday ((timestamp local-time:timestamp))

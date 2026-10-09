@@ -6,6 +6,12 @@ All notable changes to this project are documented here. Format follows
 
 ## [Unreleased]
 
+### Added
+- `second` on a list now returns `(cl:second list)`. cl-lubridate's
+  `second` shadows `cl:second`, so in any package that uses cl-lubridate
+  (or cl-tidyverse) `(second '(a b c))` used to fail with "no applicable
+  method"; now the shadowing is transparent (topic: CL shadowing).
+
 ### Fixed
 - **Date parsers signalled a type error on missing values.**
   `ymd`, `dmy`, `mdy`, `ymd-hms`, `ymd-hm`, `ymd-h`, `dmy-hms` and
@@ -23,3 +29,4 @@ All notable changes to this project are documented here. Format follows
 
 ### Tests
 - New `parsing-missing-input-gives-na` (18 checks). Suite: 133/133 pass.
+- New `second-on-lists-behaves-like-cl-second` (3 checks). Suite: 136/136.

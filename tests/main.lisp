@@ -315,3 +315,9 @@ them through as *na* rather than signal a type error."
   (let ((v (map 'vector #'ymd (vector "2023-01-01" cl-vctrs-lite:*na*))))
     (is (= 2023 (year (aref v 0))))
     (is (cl-vctrs-lite:na-p (aref v 1)))))
+
+(test second-on-lists-behaves-like-cl-second
+  "cl-lubridate:second shadows cl:second; on lists it must be cl:second."
+  (is (eq 'b (second '(a b c))))
+  (is (null (second '(a))))
+  (is (null (second '()))))
