@@ -91,63 +91,71 @@
   (local-time:encode-timestamp 0 second minute hour day month year
                                :timezone *default-tz*))
 
-;;; Missing input (NIL or cl-vctrs-lite:*na*, which cl-readr produces for
-;;; blank cells) parses to *na* instead of signalling a type error, so a
-;;; date column with gaps can be mapped through YMD and friends.
+;;; Parsing the user-facing way, like R's lubridate (decision D2):
+;;;  - X may be one value or a vector/list of values; a sequence gives a
+;;;    simple-vector of results, so (ymd column) works on a whole column.
+;;;  - Missing input (NIL or cl-vctrs-lite:*na*, which cl-readr produces for
+;;;    blank cells) gives *na*.
+;;;  - Input that cannot be parsed gives *na*, and one DATE-PARSE-FAILURE
+;;;    warning is signalled per call ("2 failed to parse"). To make
+;;;    failures fatal: (handler-bind ((date-parse-failure #'error)) ...).
+
+(define-condition date-parse-failure (warning)
+  ((count :initarg :count :reader date-parse-failure-count)
+   (inputs :initarg :inputs :reader date-parse-failure-inputs
+           :documentation "The inputs that failed, in order (at most 10)."))
+  (:report (lambda (c stream)
+             (format stream "~d failed to parse~@[: ~{~s~^, ~}~]~:[~;, ...~]."
+                     (date-parse-failure-count c)
+                     (date-parse-failure-inputs c)
+                     (> (date-parse-failure-count c)
+                        (length (date-parse-failure-inputs c)))))))
+
 (defun %missing-input-p (x)
   (or (null x) (cl-vctrs-lite:na-p x)))
 
-(defun ymd (x)
-  "Parse date with Year-Month-Day format."
-  (if (%missing-input-p x)
-      cl-vctrs-lite:*na*
-      (multiple-value-bind (y m d h min s) (parse-date-components x :ymd)
-        (%make-timestamp-from-components y m d h min s))))
+(defun %parse-dates (x parse-one)
+  "Apply PARSE-ONE to X (a value or a non-string sequence of values),
+mapping missing input to *NA* and parse errors to *NA* plus one
+DATE-PARSE-FAILURE warning for the whole call."
+  (let ((failures '())
+        (n-failed 0))
+    (flet ((one (e)
+             (if (%missing-input-p e)
+                 cl-vctrs-lite:*na*
+                 (handler-case (funcall parse-one e)
+                   (error ()
+                     (incf n-failed)
+                     (when (< (length failures) 10) (push e failures))
+                     cl-vctrs-lite:*na*)))))
+      (let ((result (if (and (typep x 'sequence)
+                             (not (stringp x))
+                             (not (null x))) ; NIL is a missing value, not ()
+                        (map 'simple-vector #'one x)
+                        (one x))))
+        (when (plusp n-failed)
+          (warn 'date-parse-failure :count n-failed :inputs (nreverse failures)))
+        result))))
 
-(defun dmy (x)
-  "Parse date with Day-Month-Year format."
-  (if (%missing-input-p x)
-      cl-vctrs-lite:*na*
-      (multiple-value-bind (y m d h min s) (parse-date-components x :dmy)
-        (%make-timestamp-from-components y m d h min s))))
+(defmacro define-date-parser (name pattern &optional doc)
+  `(defun ,name (x)
+     ,(format nil "~@[~a~%~]Parse X (a string, or a sequence of strings) with pattern ~(~s~).
+Missing input gives *NA*; unparseable input gives *NA* and a
+DATE-PARSE-FAILURE warning." doc pattern)
+     (%parse-dates x (lambda (s)
+                       (multiple-value-bind (y m d h min sec)
+                           (parse-date-components s ',pattern)
+                         (%make-timestamp-from-components y m d h min sec))))))
 
-(defun mdy (x)
-  "Parse date with Month-Day-Year format."
-  (if (%missing-input-p x)
-      cl-vctrs-lite:*na*
-      (multiple-value-bind (y m d h min s) (parse-date-components x :mdy)
-        (%make-timestamp-from-components y m d h min s))))
-
-(defun ymd-hms (x)
-  "Parse year-month-day hour:minute:second."
-  (if (%missing-input-p x)
-      cl-vctrs-lite:*na*
-      (multiple-value-bind (y m d h min s) (parse-date-components x '(:year :month :day :hour :minute :second))
-        (%make-timestamp-from-components y m d h min s))))
-
-(defun ymd-hm (x)
-  (if (%missing-input-p x)
-      cl-vctrs-lite:*na*
-      (multiple-value-bind (y m d h min s) (parse-date-components x '(:year :month :day :hour :minute))
-        (%make-timestamp-from-components y m d h min s))))
-
-(defun ymd-h (x)
-  (if (%missing-input-p x)
-      cl-vctrs-lite:*na*
-      (multiple-value-bind (y m d h min s) (parse-date-components x '(:year :month :day :hour))
-        (%make-timestamp-from-components y m d h min s))))
-
-(defun dmy-hms (x)
-  (if (%missing-input-p x)
-      cl-vctrs-lite:*na*
-      (multiple-value-bind (y m d h min s) (parse-date-components x '(:day :month :year :hour :minute :second))
-        (%make-timestamp-from-components y m d h min s))))
-
-(defun mdy-hms (x)
-  (if (%missing-input-p x)
-      cl-vctrs-lite:*na*
-      (multiple-value-bind (y m d h min s) (parse-date-components x '(:month :day :year :hour :minute :second))
-        (%make-timestamp-from-components y m d h min s))))
+(define-date-parser ymd :ymd "Parse date with Year-Month-Day format.")
+(define-date-parser dmy :dmy "Parse date with Day-Month-Year format.")
+(define-date-parser mdy :mdy "Parse date with Month-Day-Year format.")
+(define-date-parser ymd-hms (:year :month :day :hour :minute :second)
+  "Parse year-month-day hour:minute:second.")
+(define-date-parser ymd-hm (:year :month :day :hour :minute))
+(define-date-parser ymd-h (:year :month :day :hour))
+(define-date-parser dmy-hms (:day :month :year :hour :minute :second))
+(define-date-parser mdy-hms (:month :day :year :hour :minute :second))
 
 (defun make-date (&key (year 1970) (month 1) (day 1))
   (local-time:encode-timestamp 0 0 0 0 day month year :timezone *default-tz*))

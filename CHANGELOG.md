@@ -7,6 +7,13 @@ All notable changes to this project are documented here. Format follows
 ## [Unreleased]
 
 ### Breaking
+- **Unparseable dates give NA and a warning instead of an error**
+  (decision D2, as in R's lubridate). `ymd`, `dmy`, `mdy`, `ymd-hms`,
+  `ymd-hm`, `ymd-h`, `dmy-hms`, `mdy-hms` return `*na*` for input they
+  cannot parse and signal one `date-parse-failure` warning per call
+  (`"2 failed to parse: \"2024-13-45\", \"hello\"."`). To restore the
+  old behaviour: `(handler-bind ((date-parse-failure #'error)) ...)`
+  (topic: R-like parse failures).
 - **Dates and times are parsed and read in UTC by default** (decision D1,
   as in R's lubridate). New exported special `*default-tz*`
   (default `local-time:+utc-zone+`) is used by the parsers (`ymd`, `dmy`,
@@ -26,6 +33,11 @@ All notable changes to this project are documented here. Format follows
   when `tz` was given).
 
 ### Added
+- The parsers are vectorised like R's: given a vector or list they return
+  a simple-vector, so `(ymd column)` parses a whole column (no `map`
+  needed) and a call reports all failures in one warning.
+- Exported condition `date-parse-failure` (a `warning`) with readers
+  `date-parse-failure-count` and `date-parse-failure-inputs` (first 10).
 - `second` on a list now returns `(cl:second list)`. cl-lubridate's
   `second` shadows `cl:second`, so in any package that uses cl-lubridate
   (or cl-tidyverse) `(second '(a b c))` used to fail with "no applicable

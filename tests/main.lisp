@@ -343,3 +343,28 @@ does not shift with the machine's time zone."
       (is (= 8 (hour d)))
       ;; 08:00 in Tokyo is 23:00 UTC the previous day
       (is (= 4 (local-time:timestamp-day d :timezone local-time:+utc-zone+))))))
+
+(test unparseable-input-gives-na-and-one-warning
+  "D2: like R, unparseable dates become NA with one warning per call."
+  (let ((warnings '()))
+    (handler-bind ((date-parse-failure
+                     (lambda (w) (push w warnings) (muffle-warning w))))
+      (let ((v (ymd (vector "2024-01-05" "2024-13-45" "hello" cl-vctrs-lite:*na*))))
+        (is (= 5 (day (aref v 0))))
+        (is (cl-vctrs-lite:na-p (aref v 1)))
+        (is (cl-vctrs-lite:na-p (aref v 2)))
+        (is (cl-vctrs-lite:na-p (aref v 3)))))
+    (is (= 1 (length warnings)))
+    (is (= 2 (date-parse-failure-count (first warnings))))
+    (is (equal '("2024-13-45" "hello") (date-parse-failure-inputs (first warnings))))
+    (is (search "2 failed to parse" (princ-to-string (first warnings))))))
+
+(test parse-failures-can-be-made-fatal
+  (signals date-parse-failure
+    (handler-bind ((date-parse-failure #'error))
+      (ymd "not a date"))))
+
+(test parsers-accept-lists-and-scalars
+  (is (vectorp (ymd '("2024-01-05" "2024-01-06"))))
+  (is (= 6 (day (aref (ymd '("2024-01-05" "2024-01-06")) 1))))
+  (is (typep (ymd "2024-01-05") 'local-time:timestamp)))
