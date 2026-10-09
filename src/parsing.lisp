@@ -90,41 +90,63 @@
 (defun %make-timestamp-from-components (year month day hour minute second)
   (local-time:encode-timestamp 0 second minute hour day month year))
 
+;;; Missing input (NIL or cl-vctrs-lite:*na*, which cl-readr produces for
+;;; blank cells) parses to *na* instead of signalling a type error, so a
+;;; date column with gaps can be mapped through YMD and friends.
+(defun %missing-input-p (x)
+  (or (null x) (cl-vctrs-lite:na-p x)))
+
 (defun ymd (x)
   "Parse date with Year-Month-Day format."
-  (multiple-value-bind (y m d h min s) (parse-date-components x :ymd)
-    (%make-timestamp-from-components y m d h min s)))
+  (if (%missing-input-p x)
+      cl-vctrs-lite:*na*
+      (multiple-value-bind (y m d h min s) (parse-date-components x :ymd)
+        (%make-timestamp-from-components y m d h min s))))
 
 (defun dmy (x)
   "Parse date with Day-Month-Year format."
-  (multiple-value-bind (y m d h min s) (parse-date-components x :dmy)
-    (%make-timestamp-from-components y m d h min s)))
+  (if (%missing-input-p x)
+      cl-vctrs-lite:*na*
+      (multiple-value-bind (y m d h min s) (parse-date-components x :dmy)
+        (%make-timestamp-from-components y m d h min s))))
 
 (defun mdy (x)
   "Parse date with Month-Day-Year format."
-  (multiple-value-bind (y m d h min s) (parse-date-components x :mdy)
-    (%make-timestamp-from-components y m d h min s)))
+  (if (%missing-input-p x)
+      cl-vctrs-lite:*na*
+      (multiple-value-bind (y m d h min s) (parse-date-components x :mdy)
+        (%make-timestamp-from-components y m d h min s))))
 
 (defun ymd-hms (x)
   "Parse year-month-day hour:minute:second."
-  (multiple-value-bind (y m d h min s) (parse-date-components x '(:year :month :day :hour :minute :second))
-    (%make-timestamp-from-components y m d h min s)))
+  (if (%missing-input-p x)
+      cl-vctrs-lite:*na*
+      (multiple-value-bind (y m d h min s) (parse-date-components x '(:year :month :day :hour :minute :second))
+        (%make-timestamp-from-components y m d h min s))))
 
 (defun ymd-hm (x)
-  (multiple-value-bind (y m d h min s) (parse-date-components x '(:year :month :day :hour :minute))
-    (%make-timestamp-from-components y m d h min s)))
+  (if (%missing-input-p x)
+      cl-vctrs-lite:*na*
+      (multiple-value-bind (y m d h min s) (parse-date-components x '(:year :month :day :hour :minute))
+        (%make-timestamp-from-components y m d h min s))))
 
 (defun ymd-h (x)
-  (multiple-value-bind (y m d h min s) (parse-date-components x '(:year :month :day :hour))
-    (%make-timestamp-from-components y m d h min s)))
+  (if (%missing-input-p x)
+      cl-vctrs-lite:*na*
+      (multiple-value-bind (y m d h min s) (parse-date-components x '(:year :month :day :hour))
+        (%make-timestamp-from-components y m d h min s))))
 
 (defun dmy-hms (x)
-  (multiple-value-bind (y m d h min s) (parse-date-components x '(:day :month :year :hour :minute :second))
-    (%make-timestamp-from-components y m d h min s)))
+  (if (%missing-input-p x)
+      cl-vctrs-lite:*na*
+      (multiple-value-bind (y m d h min s) (parse-date-components x '(:day :month :year :hour :minute :second))
+        (%make-timestamp-from-components y m d h min s))))
 
 (defun mdy-hms (x)
-  (multiple-value-bind (y m d h min s) (parse-date-components x '(:month :day :year :hour :minute :second))
-    (%make-timestamp-from-components y m d h min s)))
+  (if (%missing-input-p x)
+      cl-vctrs-lite:*na*
+      (multiple-value-bind (y m d h min s) (parse-date-components x '(:month :day :year :hour :minute :second))
+        (%make-timestamp-from-components y m d h min s))))
 
 (defun make-date (&key (year 1970) (month 1) (day 1))
   (local-time:encode-timestamp 0 0 0 0 day month year))

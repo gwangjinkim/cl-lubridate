@@ -3,7 +3,8 @@
   :author "Gwang-Jin Kim <gwang.jin.kim.phd@gmail.com>"
   :license "MIT"
   :depends-on ("local-time"
-               "cl-ppcre")
+               "cl-ppcre"
+               "cl-vctrs-lite") ; shared missing value *na*
                ;; "cl-tibble") ;; Integration as requested
   :components ((:module "src"
                 :components

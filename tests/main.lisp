@@ -305,3 +305,13 @@
 
 
 
+
+(test parsing-missing-input-gives-na
+  "Blank cells read by cl-readr are cl-vctrs-lite:*na*; parsers must pass
+them through as *na* rather than signal a type error."
+  (dolist (parser (list #'ymd #'dmy #'mdy #'ymd-hms #'ymd-hm #'ymd-h #'dmy-hms #'mdy-hms))
+    (is (cl-vctrs-lite:na-p (funcall parser cl-vctrs-lite:*na*)))
+    (is (cl-vctrs-lite:na-p (funcall parser nil))))
+  (let ((v (map 'vector #'ymd (vector "2023-01-01" cl-vctrs-lite:*na*))))
+    (is (= 2023 (year (aref v 0))))
+    (is (cl-vctrs-lite:na-p (aref v 1)))))
